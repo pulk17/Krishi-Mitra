@@ -1,22 +1,15 @@
 {
-  "name": "plant-diagnosis-app",
+  "name": "krishi-mitra",
   "version": "1.0.0",
-  "description": "AI-powered plant disease diagnosis app",
+  "description": "AI-powered plant disease diagnosis system",
   "scripts": {
-    "install": "npm run install:backend && npm run install:frontend",
-    "install:backend": "cd backend && pip install -r requirements.txt",
-    "install:frontend": "cd frontend && npm install",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev": "cd frontend && npm run dev",
     "dev:backend": "cd backend && python main.py",
     "dev:frontend": "cd frontend && npm run dev",
-    "build": "cd frontend && npm run build",
-    "start": "npm run dev"
+    "install:all": "cd frontend && npm install && cd ../backend && pip install -r requirements.txt",
+    "clean": "cd frontend && npm run clean"
   },
-  "devDependencies": {
-    "concurrently": "^8.2.2"
-  },
-  "engines": {
-    "node": ">=16.0.0",
-    "python": ">=3.8.0"
-  }
+  "keywords": ["agriculture", "ai", "plant-disease", "diagnosis"],
+  "author": "Your Name",
+  "license": "MIT"
 }

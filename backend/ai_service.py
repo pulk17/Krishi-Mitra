@@ -5,8 +5,8 @@ import google.generativeai as genai
 import base64
 import json
 import logging
-from typing import Dict, Any
-from config import GEMINI_API_KEY, GEMINI_MODEL, MAX_TOKENS, TEMPERATURE
+from typing import Dict, Any, List
+from config import GEMINI_API_KEY, GEMINI_MODEL
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -35,18 +35,21 @@ class PlantDiagnosisAI:
         Return your response as a JSON object with this exact structure:
         {{
             "disease_name": "Name of the disease or 'Healthy Plant' if no issues found",
-            "description": "Brief explanation of what you observe and the likely cause",
-            "treatment": ["Step 1 treatment", "Step 2 treatment", "Step 3 treatment"],
+            "description": "Brief explanation of what you observe and the likely cause.",
+            "symptoms": ["List of observed symptoms, e.g., 'Yellow spots on leaves', 'Wilting stems'"],
+            "treatment": "A single string containing 3-5 actionable treatment steps, separated by newlines (\\n).",
+            "prevention": "A single string containing 2-3 actionable prevention tips, separated by newlines (\\n).",
             "confidence": 0.85
         }}
         
         Guidelines:
-        - If the plant looks healthy, use "Healthy Plant" as disease_name
-        - Keep descriptions simple and practical for farmers
-        - Provide 3-5 actionable treatment steps
-        - Confidence should be between 0.0 and 1.0
-        - If you're unsure, lower the confidence and suggest consulting an expert
-        - Focus on organic and accessible treatments when possible
+        - If the plant looks healthy, use "Healthy Plant" as disease_name and provide tips for keeping it healthy.
+        - Keep descriptions and recommendations simple and practical for farmers.
+        - Ensure 'treatment' and 'prevention' are single strings with steps separated by newlines.
+        - 'symptoms' must be an array of strings.
+        - 'confidence' should be a float between 0.0 and 1.0.
+        - If you are unsure, lower the confidence and suggest consulting an expert.
+        - Focus on organic and accessible treatments when possible.
         """
     
     async def diagnose_plant(self, image_data: str, language: str = "English") -> Dict[str, Any]:
@@ -91,17 +94,17 @@ class PlantDiagnosisAI:
             diagnosis_data = json.loads(response_text)
             
             # Validate response structure
-            required_fields = ['disease_name', 'description', 'treatment', 'confidence']
+            required_fields = ['disease_name', 'description', 'symptoms', 'treatment', 'prevention', 'confidence']
             for field in required_fields:
                 if field not in diagnosis_data:
                     raise ValueError(f"Missing required field: {field}")
             
-            # Ensure treatment is a list
-            if not isinstance(diagnosis_data['treatment'], list):
-                diagnosis_data['treatment'] = [str(diagnosis_data['treatment'])]
-            
+            # Ensure symptoms is a list
+            if not isinstance(diagnosis_data.get('symptoms'), list):
+                diagnosis_data['symptoms'] = [str(diagnosis_data.get('symptoms', ''))]
+
             # Ensure confidence is a float between 0 and 1
-            confidence = float(diagnosis_data['confidence'])
+            confidence = float(diagnosis_data.get('confidence', 0.0))
             diagnosis_data['confidence'] = max(0.0, min(1.0, confidence))
             
             logger.info(f"Successfully diagnosed: {diagnosis_data['disease_name']}")
@@ -120,24 +123,18 @@ class PlantDiagnosisAI:
         if language.lower() == "hindi":
             return {
                 "disease_name": "विश्लेषण असफल",
-                "description": f"छवि का विश्लेषण नहीं हो सका: {error_msg}। कृपया छवि की गुणवत्ता जांचें और पुनः प्रयास करें।",
-                "treatment": [
-                    "छवि स्पष्ट और अच्छी रोशनी में हो",
-                    "दूसरे कोण से फोटो लें",
-                    "इंटरनेट कनेक्शन जांचें",
-                    "स्थानीय कृषि विशेषज्ञ से सलाह लें"
-                ],
+                "description": f"छवि का विश्लेषण नहीं हो सका: {error_msg}. कृपया छवि की गुणवत्ता जांचें और पुनः प्रयास करें।",
+                "symptoms": ["कोई लक्षण नहीं मिला"],
+                "treatment": "छवि स्पष्ट और अच्छी रोशनी में हो\nदूसरे कोण से फोटो लें\nइंटरनेट कनेक्शन जांचें",
+                "prevention": "स्थानीय कृषि विशेषज्ञ से सलाह लें",
                 "confidence": 0.0
             }
         else:
             return {
                 "disease_name": "Analysis Failed",
                 "description": f"Could not analyze the image: {error_msg}. Please check image quality and try again.",
-                "treatment": [
-                    "Ensure image is clear and well-lit",
-                    "Try taking photo from different angle",
-                    "Check internet connection",
-                    "Consult local agricultural expert"
-                ],
+                "symptoms": ["No symptoms detected"],
+                "treatment": "Ensure image is clear and well-lit\nTry taking photo from a different angle\nCheck internet connection",
+                "prevention": "Consult a local agricultural expert",
                 "confidence": 0.0
             }

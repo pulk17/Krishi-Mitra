@@ -1,16 +1,19 @@
 # 🌱 Krishi Mitra - AI Plant Disease Detection
 
-**Krishi Mitra** (Sanskrit: कृषि मित्र, meaning "Farmer's Friend") is an AI-powered plant disease diagnosis application that helps farmers and gardeners identify plant diseases and get treatment recommendations instantly.
+**Krishi Mitra** (Sanskrit: कृषि मित्र, meaning "Farmer's Friend") is a comprehensive AI-powered plant disease diagnosis application with user authentication and data persistence. It helps farmers and gardeners identify plant diseases, get treatment recommendations, and track their plant health history over time.
 
 ## ✨ Features
 
+- 🔐 **Google OAuth Authentication**: Secure sign-in with Google accounts
 - 🤖 **AI-Powered Diagnosis**: Uses Google Gemini 1.5 Flash for accurate plant disease detection
 - 🌍 **Multi-Language Support**: Available in English, Hindi, and Spanish
 - 📱 **Mobile-First Design**: Responsive interface that works on all devices
-- 📊 **Dashboard Analytics**: Track diagnosis history and statistics
-- 🔒 **Privacy-First**: No data storage, completely stateless design
+- 📊 **Dashboard Analytics**: Track diagnosis history and plant health statistics
+- 💾 **Data Persistence**: Store diagnoses and conversations with Supabase
 - ⚡ **Real-Time Results**: Get instant diagnosis and treatment recommendations
-- 🎨 **Modern UI**: Clean interface built with shadcn/ui components
+- 🎨 **Modern UI**: Beautiful landing page and dashboard with shadcn/ui components
+- 📈 **Health Tracking**: Monitor plant health trends over time
+- 🔒 **Secure Data**: Row-level security ensures your data stays private
 
 ## 🚀 Quick Start
 

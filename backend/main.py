@@ -7,8 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uuid
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from ai_service import PlantDiagnosisAI
+from config import ALLOWED_ORIGINS
 
 # Create FastAPI app
 app = FastAPI(
@@ -20,7 +21,7 @@ app = FastAPI(
 # Add CORS middleware for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,7 +39,9 @@ class DiagnosisResponse(BaseModel):
     id: str
     disease_name: str
     description: str
-    treatment: List[str]
+    symptoms: List[str]
+    treatment: str
+    prevention: str
     confidence: float
     timestamp: str
 
@@ -77,7 +80,9 @@ async def diagnose_plant(request: DiagnosisRequest):
             id=str(uuid.uuid4()),
             disease_name=diagnosis_result["disease_name"],
             description=diagnosis_result["description"],
+            symptoms=diagnosis_result["symptoms"],
             treatment=diagnosis_result["treatment"],
+            prevention=diagnosis_result["prevention"],
             confidence=diagnosis_result["confidence"],
             timestamp=datetime.now().isoformat()
         )

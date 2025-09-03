@@ -6,13 +6,16 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Centralized type definitions for the application.
+ * Centralized type definition for the diagnosis result.
+ * This now matches the backend API response exactly.
  */
 export interface DiagnosisResult {
   id: string;
   disease_name: string;
   description: string;
-  treatment: string[];
+  symptoms: string[];
+  treatment: string;
+  prevention: string;
   confidence: number;
   timestamp: string;
 }

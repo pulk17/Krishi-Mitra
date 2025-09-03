@@ -1,76 +1,106 @@
 'use client'
 
 import { useState } from 'react';
-import { Brain, AlertTriangle } from 'lucide-react';
+import { Brain, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
-import { LanguageSelector } from './LanguageSelector';
-import { ImageUploader } from './ImageUploader';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { ResultsDisplay } from './ResultsDisplay';
+import { MultiFileUpload } from './MultiFileUpload';
+import { Button } from '@/components/ui/button';
 
 /**
  * This component orchestrates the main user workflow:
- * 1. Select language
- * 2. Upload image
- * 3. View loading state
- * 4. View results or error
+ * 1. Upload one or more images
+ * 2. View loading state
+ * 3. View results or error
  */
 export function DiagnosisFlow() {
-  const [language, setLanguage] = useState('English');
-  const { loading, result, error, analyzePlant, resetDiagnosis } = useDiagnosis();
+  const { language, t } = useLanguage();
+  const { loading, result, error, analyzeMultiplePlants, resetDiagnosis } = useDiagnosis();
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  const handleAnalyze = (imageData: string) => {
-    analyzePlant(imageData, language);
+  const handleAnalyze = async () => {
+    if (selectedFiles.length === 0) return;
+
+    const diagnosisLanguage = language === 'hi' ? 'Hindi' : 'English';
+
+    const readFileAsBase64 = (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(file);
+      });
+    };
+
+    try {
+      const imagePromises = selectedFiles.map(readFileAsBase64);
+      const base64Images = await Promise.all(imagePromises);
+      
+      await analyzeMultiplePlants(base64Images, diagnosisLanguage);
+      
+      setSelectedFiles([]);
+    } catch (err) {
+      console.error("Error reading files:", err);
+    }
   };
 
-  // This function is passed to the ResultsDisplay to reset the state
   const handleReset = () => {
     resetDiagnosis();
-    // We can also reset the image uploader's internal state if needed,
-    // but the component-based approach handles this separation cleanly.
-    // For now, starting a new diagnosis just clears the previous result.
+    setSelectedFiles([]);
   }
 
-  // If we have a result, show only the result card.
   if (result) {
     return <ResultsDisplay result={result} onReset={handleReset} />;
   }
 
-  // Otherwise, show the uploader and language selector flow.
   return (
-    <>
-      <LanguageSelector
-        language={language}
-        onLanguageChange={setLanguage}
-        disabled={loading}
-      />
+    <Card>
+      <CardContent className="pt-6 space-y-6">
+        <div>
+           <label className="text-sm font-medium flex items-center gap-2 mb-2">
+            <ImageIcon className="h-4 w-4" />
+            {t.uploadImage}
+          </label>
+          <MultiFileUpload 
+            onFilesSelected={setSelectedFiles} 
+            disabled={loading} 
+          />
+        </div>
+        
+        {selectedFiles.length > 0 && !loading && (
+          <div className="flex justify-center">
+            <Button
+              onClick={handleAnalyze}
+              disabled={loading}
+              size="lg"
+              className="bg-green-600 hover:bg-green-700 w-full"
+            >
+              <Brain className="mr-2 h-4 w-4" />
+              {t.analyzeImage} ({selectedFiles.length})
+            </Button>
+          </div>
+        )}
 
-      <ImageUploader onAnalyze={handleAnalyze} loading={loading} />
-      
-      {loading && (
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <div className="flex items-center justify-center gap-2">
-                <Brain className="h-6 w-6 text-green-600 animate-pulse" />
-                <span className="text-lg font-medium">AI is analyzing your plant...</span>
-              </div>
-              <Progress value={50} className="w-full max-w-md mx-auto animate-pulse" />
-              <p className="text-sm text-muted-foreground">This may take a few seconds</p>
+        {loading && (
+          <div className="text-center space-y-3 pt-4">
+            <div className="flex items-center justify-center gap-2">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+              <span className="text-lg font-medium">{t.analyzing}</span>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <p className="text-sm text-muted-foreground">Analyzing your plant image(s)...</p>
+          </div>
+        )}
 
-      {error && !loading && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-    </>
+        {error && !loading && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
   );
 }

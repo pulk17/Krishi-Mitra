@@ -1,34 +1,49 @@
-import { Brain } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+'use client'
+
+import { Globe } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { Language } from '@/lib/i18n/translations';
+import { useAuth } from '@/hooks/useSupabase';
 
 interface LanguageSelectorProps {
-  language: string;
-  onLanguageChange: (lang: string) => void;
-  disabled?: boolean;
+  variant?: 'header' | 'card'
+  disabled?: boolean
 }
 
-export function LanguageSelector({ language, onLanguageChange, disabled = false }: LanguageSelectorProps) {
+export function LanguageSelector({ variant = 'header', disabled = false }: LanguageSelectorProps) {
+  const { language, t } = useLanguage()
+  const { updateLanguagePreference } = useAuth();
+
+  const handleLanguageChange = (value: string) => {
+    updateLanguagePreference(value as Language);
+  }
+
+  if (variant === 'header') {
+    return (
+      <Select value={language} onValueChange={handleLanguageChange} disabled={disabled}>
+        <SelectTrigger className="w-auto bg-transparent border-0 text-foreground hover:bg-muted focus:ring-0 gap-2">
+          {language === 'en' ? '🇺🇸' : '🇮🇳'}
+          <span className="hidden md:inline">{language === 'en' ? t.english : t.hindi}</span>
+        </SelectTrigger>
+        <SelectContent className="bg-white border border-gray-200">
+          <SelectItem value="en" className="hover:bg-gray-100">🇺🇸 {t.english}</SelectItem>
+          <SelectItem value="hi" className="hover:bg-gray-100">🇮🇳 {t.hindi}</SelectItem>
+        </SelectContent>
+      </Select>
+    )
+  }
+
+  // Card variant
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Brain className="h-5 w-5" />
-          Language Preference
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Select value={language} onValueChange={onLanguageChange} disabled={disabled}>
-          <SelectTrigger className="w-full max-w-xs">
-            <SelectValue placeholder="Select language" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="English">🇺🇸 English</SelectItem>
-            <SelectItem value="Hindi">🇮🇳 Hindi</SelectItem>
-            <SelectItem value="Spanish">🇪🇸 Spanish</SelectItem>
-          </SelectContent>
-        </Select>
-      </CardContent>
-    </Card>
-  );
+    <Select value={language} onValueChange={handleLanguageChange} disabled={disabled}>
+      <SelectTrigger className="w-full max-w-xs">
+        {language === 'en' ? '🇺🇸 English' : '🇮🇳 हिंदी'}
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="en">🇺🇸 {t.english}</SelectItem>
+        <SelectItem value="hi">🇮🇳 {t.hindi}</SelectItem>
+      </SelectContent>
+    </Select>
+  )
 }

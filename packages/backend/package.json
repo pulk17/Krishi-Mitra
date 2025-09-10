@@ -7,7 +7,7 @@
     "predev": "prisma generate",
     "dev": "dotenv -e ../../.env -- tsx --watch src/server.ts",
     "test:gemini": "tsx test-gemini.ts",
-    "build": "pnpm exec prisma generate && tsc && cpr src/python dist/python -o",
+    "build": "../../node_modules/.bin/prisma generate && tsc && cpr src/python dist/python -o",
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit"
   },

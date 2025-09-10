@@ -8,9 +8,8 @@
     "dev": "pnpm --filter \"./packages/*\" --parallel dev",
     "dev:backend": "pnpm --filter krishi-mitra-backend dev",
     "dev:frontend": "pnpm --filter plant-diagnosis-frontend dev",
-    "build:types": "pnpm --filter @krishi-mitra/types build",
-    "build:backend": "pnpm --filter krishi-mitra-backend build",
     "build:frontend": "pnpm --filter \"plant-diagnosis-frontend^...\" build",
+    "build:backend": "pnpm --filter \"krishi-mitra-backend^...\" build",
     "clean": "rimraf \"node_modules\" \"packages/**/node_modules\" \"packages/**/dist\" \"packages/**/.next\" \"packages/**/*.tsbuildinfo\"",
     "db:pull": "prisma db pull --schema=./packages/backend/prisma/schema.prisma",
     "db:push": "prisma db push --schema=./packages/backend/prisma/schema.prisma"

@@ -1,0 +1,16 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "./packages/types" },
+    { "path": "./packages/backend" },
+    { "path": "./packages/frontend" }
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["packages/frontend/*"],
+      "@krishi-mitra/types": ["packages/types/src"]
+    }
+  }
+}

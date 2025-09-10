@@ -2,14 +2,37 @@
   "name": "krishi-mitra",
   "version": "1.0.0",
   "description": "AI-powered plant disease diagnosis system",
+  "private": true,
   "scripts": {
-    "dev": "cd frontend && npm run dev",
-    "dev:backend": "cd backend && python main.py",
-    "dev:frontend": "cd frontend && npm run dev",
-    "install:all": "cd frontend && npm install && cd ../backend && pip install -r requirements.txt",
-    "clean": "cd frontend && npm run clean"
+    "install:all": "pnpm install",
+    "dev": "pnpm --filter \"./packages/*\" --parallel dev",
+    "dev:backend": "pnpm --filter krishi-mitra-backend dev",
+    "dev:frontend": "pnpm --filter plant-diagnosis-frontend dev",
+    "build": "tsc --build --verbose && pnpm --filter plant-diagnosis-frontend build",
+    "clean": "rimraf \"node_modules\" \"packages/**/node_modules\" \"packages/**/dist\" \"packages/**/.next\" \"packages/**/*.tsbuildinfo\"",
+    "db:pull": "prisma db pull --schema=./packages/backend/prisma/schema.prisma",
+    "db:push": "prisma db push --schema=./packages/backend/prisma/schema.prisma"
   },
-  "keywords": ["agriculture", "ai", "plant-disease", "diagnosis"],
+  "keywords": [
+    "agriculture",
+    "ai",
+    "plant-disease",
+    "diagnosis"
+  ],
   "author": "Your Name",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "dotenv-cli": "^10.0.0",
+    "prisma": "^5.15.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1"
+  }
 }

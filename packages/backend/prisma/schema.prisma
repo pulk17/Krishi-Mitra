@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Profile model based on Supabase Auth users table
+model Profile {
+  id         String      @id @default(uuid())
+  email      String      @unique
+  full_name  String?
+  avatar_url String?
+  created_at DateTime    @default(now())
+  updated_at DateTime    @updatedAt
+  diagnoses  Diagnosis[] // Relation to the Diagnosis model
+}
+
+// Diagnosis model for storing analysis results
+model Diagnosis {
+  id           String    @id @default(uuid())
+  user_id      String
+  image_url    String?
+  disease_name String?
+  confidence   Float?
+  symptoms     String[]
+  treatment    String?
+  prevention   String?
+  language     String?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+  Profile      Profile   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+}

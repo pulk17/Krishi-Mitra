@@ -29,3 +29,7 @@ Thumbs.db
 logs/
 *.log
 /src/generated/prisma
+
+# Python
+/src/python/.venv
+/src/python/__pycache__/

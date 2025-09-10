@@ -8,40 +8,52 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { DiagnosisHistoryItem } from '@krishi-mitra/types';
+import { DiagnosisResult } from '@krishi-mitra/types';
 
 export default function DiagnosisDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { id } = params;
 
-  // Select state and actions from the Zustand store
   const diagnoses = useAppStore((state) => state.diagnoses);
   const fetchDiagnoses = useAppStore((state) => state.fetchDiagnoses);
   const isLoadingHistory = useAppStore((state) => state.isLoadingHistory);
-  
-  // Find the specific diagnosis from the list
+
   const diagnosis = diagnoses.find((d) => d.id === id);
 
-  // If the diagnoses list is empty on page load (e.g., a refresh), fetch it.
   useEffect(() => {
     if (diagnoses.length === 0) {
       fetchDiagnoses();
     }
   }, [diagnoses, fetchDiagnoses]);
 
-  // The ResultsDisplay component expects an array, so we wrap our single diagnosis.
-  // We also need to cast our DiagnosisHistoryItem to the DiagnosisResult shape.
-  const resultsToDisplay = diagnosis ? [{
-    disease_name: diagnosis.disease_name || 'N/A',
-    confidence: diagnosis.confidence || 0,
-    symptoms: diagnosis.symptoms || [],
-    treatment: diagnosis.treatment || 'No treatment information available.',
-    prevention: diagnosis.prevention || 'No prevention information available.',
-    language: (diagnosis.language as 'en' | 'hi') || 'en',
-  }] : [];
+  const resultsToDisplay: DiagnosisResult[] = [];
+  if (diagnosis) {
+    if (diagnosis.details && typeof diagnosis.details === 'object' && 'en' in diagnosis.details) {
+      resultsToDisplay.push(diagnosis.details as DiagnosisResult);
+    } else {
+      // CORRECTED: The fallback logic now correctly builds the full DiagnosisResult type
+      const fallbackResult: DiagnosisResult = {
+        is_healthy: diagnosis.disease_name?.toLowerCase().includes('healthy') ?? false,
+        confidence: diagnosis.confidence || 0,
+        en: {
+          disease_name: diagnosis.disease_name || 'N/A',
+          symptoms: Array.isArray(diagnosis.symptoms) ? diagnosis.symptoms : [],
+          treatment: diagnosis.treatment || 'No treatment information available.',
+          prevention: diagnosis.prevention || 'No prevention information available.',
+        },
+        hi: {
+          disease_name: 'जानकारी उपलब्ध नहीं है',
+          symptoms: [],
+          treatment: 'जानकारी उपलब्ध नहीं है',
+          prevention: 'जानकारी उपलब्ध नहीं है',
+          advice: 'जानकारी उपलब्ध नहीं है',
+        },
+      };
+      resultsToDisplay.push(fallbackResult);
+    }
+  }
 
-  // Handle loading state
   if (isLoadingHistory && !diagnosis) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -50,7 +62,6 @@ export default function DiagnosisDetailPage() {
     );
   }
 
-  // Handle case where diagnosis is not found after loading
   if (!isLoadingHistory && !diagnosis) {
     return (
       <>
@@ -82,7 +93,7 @@ export default function DiagnosisDetailPage() {
               Back to Dashboard
             </Link>
           </Button>
-          {diagnosis && (
+          {resultsToDisplay.length > 0 && (
             <ResultsDisplay 
               results={resultsToDisplay} 
               onReset={() => router.push('/dashboard')} 

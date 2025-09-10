@@ -15,6 +15,18 @@ router.get('/diagnoses', catchAsync(async (req: Request, res: Response) => {
   res.status(200).json(diagnoses);
 }));
 
+/**
+ * NEW ROUTE
+ * DELETE /api/user/diagnoses - Delete all of a user's diagnoses.
+ */
+router.delete('/diagnoses', catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(401, 'Unauthorized');
+  }
+  await storageService.deleteAllDiagnoses(req.user.id);
+  res.status(204).send(); // 204 No Content is standard for successful deletions
+}));
+
 // GET /api/user/profile - Fetch user profile
 router.get('/profile', catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -22,7 +34,6 @@ router.get('/profile', catchAsync(async (req: Request, res: Response) => {
   }
   const profile = await storageService.getProfile(req.user);
   if (!profile) {
-    // This case should be rare due to the self-healing getProfile method
     throw new ApiError(404, 'Profile not found and could not be created.');
   }
   res.status(200).json(profile);

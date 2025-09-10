@@ -18,15 +18,15 @@ import { Button } from '@/components/ui/button';
  * 4. View results or error
  */
 export function DiagnosisFlow() {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const { loading, results, error, analyzeMultiplePlants, resetDiagnosis } = useDiagnosis();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const handleAnalyze = async () => {
     if (selectedFiles.length === 0) return;
-    
-    const diagnosisLanguage = language === 'hi' ? 'hi' : 'en';
-    await analyzeMultiplePlants(selectedFiles, diagnosisLanguage);
+    // CORRECTED: The function now only takes one argument (files).
+    // The language is handled automatically by the backend.
+    await analyzeMultiplePlants(selectedFiles);
     setSelectedFiles([]);
   };
 
@@ -64,7 +64,7 @@ export function DiagnosisFlow() {
               <Brain className="mr-2 h-4 w-4" />
               {t.analyzeImage} ({selectedFiles.length})
             </Button>
-           </div>
+          </div>
         )}
 
         {loading && (
@@ -73,7 +73,7 @@ export function DiagnosisFlow() {
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
               <span className="text-lg font-medium">{t.analyzing}</span>
             </div>
-            <p className="text-sm text-muted-foreground">Uploading and analyzing your plant image(s)...</p>
+             <p className="text-sm text-muted-foreground">Uploading and analyzing your plant image(s)...</p>
           </div>
         )}
 

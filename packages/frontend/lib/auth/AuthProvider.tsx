@@ -40,7 +40,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async () => {
     try {
-      // FIX: Specify the expected return type for the apiClient call.
       const profileData = await apiClient.get<Profile>('/api/user/profile');
       setProfile(profileData);
     } catch (error) {
@@ -56,36 +55,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const getInitialSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
-
-        if (currentUser) {
-          // No need to await, let it load in the background
-          fetchProfile();
-        }
-      } catch (error) {
-        console.error('Error getting initial session:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getInitialSession();
-
+    // REMOVED the initial `getSession` call to prevent the first fetch.
+    // onAuthStateChange handles both the initial state and subsequent changes.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event: any, session: any) => {
+      async (_event, session) => {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         setIsGuest(false);
 
         if (currentUser) {
+          // This will now be the ONLY automatic call to fetchProfile.
           await fetchProfile();
         } else {
           setProfile(null);
         }
+        setLoading(false);
       }
     );
 
@@ -102,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLanguage(lang);
     localStorage.setItem('krishi-mitra-language', lang);
   };
-
+  
   const signOut = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
@@ -110,9 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
     setIsGuest(false);
   };
-
+  
   const continueAsGuest = () => {
-    // Guest mode can be implemented here if needed in the future.
     console.warn("Guest mode is not implemented.");
   };
 
@@ -127,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     continueAsGuest,
     updateLanguagePreference,
   };
-
+  
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

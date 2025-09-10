@@ -19,9 +19,7 @@ const upload = multer({
   },
 });
 
-// CORRECT MIDDLEWARE ORDER: 1. Multer (stream), 2. Auth (async logic)
 router.post('/', upload.single('image'), auth, catchAsync(async (req: Request, res: Response) => {
-  // Auth check is now handled by middleware just before this, but req.user check is good practice
   if (!req.user) {
     throw new ApiError(401, 'Unauthorized');
   }
@@ -30,18 +28,16 @@ router.post('/', upload.single('image'), auth, catchAsync(async (req: Request, r
     throw new ApiError(400, 'Image file is required');
   }
 
-  const { language = 'en' }: DiagnosisRequest = req.body;
   const { buffer: imageBuffer, mimetype: mimeType } = req.file;
 
   // 1. Get AI analysis from Gemini
   const analysisResult = await geminiService.analyzePlantDisease({
     imageBuffer,
     mimeType,
-    language,
+    // The `language` property has been removed from this call.
   });
 
   // 2. Upload image and save diagnosis to DB
-  // The result from this is not sent to the user, but we await it to ensure it completes
   await storageService.uploadImageAndSaveDiagnosis(
     req.user.id,
     { buffer: imageBuffer, mimeType },

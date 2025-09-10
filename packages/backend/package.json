@@ -7,7 +7,7 @@
     "predev": "prisma generate",
     "dev": "dotenv -e ../../.env -- tsx --watch src/server.ts",
     "test:gemini": "tsx test-gemini.ts",
-    "build": "prisma generate && tsc",
+    "build": "prisma generate && tsc && cpr src/python dist/python -o",
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit"
   },
@@ -27,6 +27,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^20.12.12",
+    "cpr": "^3.0.1",
     "prisma": "^5.15.0",
     "tsx": "^4.10.2",
     "typescript": "^5.4.5"

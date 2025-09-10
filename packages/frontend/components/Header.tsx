@@ -1,6 +1,6 @@
 'use client'
 
-import { Leaf, Settings, User, LogOut } from 'lucide-react';
+import { Leaf, User, LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useSupabase';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
-import { SettingsDialog } from './SettingsDialog';
 import { LanguageSelector } from './LanguageSelector';
 
 export function Header() {
@@ -37,7 +36,7 @@ export function Header() {
   const displayName = isGuest 
     ? 'Guest User'
     : profile?.full_name ||
-      user?.user_metadata?.full_name || 
+      user?.user_metadata?.full_name ||
       user?.user_metadata?.name ||
       user?.email?.split('@')[0] || 
       'User';
@@ -50,18 +49,10 @@ export function Header() {
             <Leaf className="h-8 w-8 text-green-600" />
             <h1 className="text-2xl font-bold text-green-800">{t.appName}</h1>
           </div>
-        
+          
           <div className="flex items-center gap-2">
             
             <LanguageSelector variant="header" />
-
-            {/* Settings Dialog Trigger */}
-            <SettingsDialog>
-              <Button variant="ghost" size="sm">
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
-            </SettingsDialog>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -71,13 +62,6 @@ export function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <SettingsDialog>
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                    <Settings className="h-4 w-4 mr-2" />
-                    Settings
-                  </DropdownMenuItem>
-                </SettingsDialog>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   onClick={handleSignOut}
                   disabled={isSigningOut}

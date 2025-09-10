@@ -4,6 +4,7 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { diagnosisRouter } from './routes/diagnosis';
 import { userRouter } from './routes/user';
+import { predictionRouter } from './routes/prediction'; // <-- ADD THIS IMPORT
 import { auth } from './middleware/auth';
 import { errorHandler } from './middleware/errorHandler';
 import ApiError from './utils/ApiError';
@@ -20,15 +21,19 @@ app.use(
   })
 );
 
+// Global body parsers - CRITICAL for middleware consistency
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 // Health check endpoint (public)
 app.get('/health', (_req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
 // --- API ROUTES ---
-// The auth middleware is now applied inside the respective routers for better control.
 app.use('/api/diagnose', diagnosisRouter);
-app.use('/api/user', auth, express.json({ limit: '10mb' }), userRouter);
+app.use('/api/user', auth, userRouter);
+app.use('/api/predict', predictionRouter); // <-- ADD THIS LINE TO MOUNT THE ROUTER
 
 // --- ERROR HANDLING ---
 // Handle 404 for any routes not found

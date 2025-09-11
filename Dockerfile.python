@@ -1,3 +1,5 @@
+# --- file: Dockerfile.python ---
+
 # Use an official Python runtime as a parent image
 FROM python:3.10-slim
 
@@ -8,7 +10,14 @@ ENV APP_HOME=/app
 # Create and set the working directory
 WORKDIR $APP_HOME
 
-# Install dependencies
+# --> THIS IS THE FIX <--
+# Install system dependencies. The libgomp1 library is required by
+# scikit-learn/lightgbm for multi-threading and is not in the slim image.
+RUN apt-get update && apt-get install -y libgomp1 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
 # Copy only the requirements file to leverage Docker cache
 COPY packages/backend/src/python/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

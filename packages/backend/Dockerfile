@@ -53,9 +53,9 @@ RUN pnpm deploy --filter krishi-mitra-backend --prod /prod --legacy
 
 
 #-----------------------------------------------------------------
-# Stage 3: Production Image
+# Stage 3: Production Image (REVISED)
 # - Starts from a fresh slim image
-# - Copies only the necessary built artifacts
+# - Copies only the necessary built artifacts to a clean, flat structure
 #-----------------------------------------------------------------
 FROM node:20-slim AS production
 
@@ -68,20 +68,16 @@ ENV VIRTUAL_ENV=/opt/venv
 COPY --from=builder /opt/venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# 3. Set up the working directory
+# 3. Set up the final working directory
 WORKDIR /app
 
-# 4. Copy the pruned, production-only node_modules and package.json
-COPY --from=pruner /prod/package.json /prod/pnpm-lock.yaml ./
+# 4. Copy the pruned package.json and node_modules from the pruner stage
+COPY --from=pruner /prod/package.json .
 COPY --from=pruner /prod/node_modules ./node_modules
-COPY --from=pruner /prod/packages/backend/package.json ./packages/backend/
 
-# 5. Copy the compiled application code
-COPY --from=builder /app/packages/backend/dist ./packages/backend/dist
+# 5. Copy the compiled application code from the builder stage
+COPY --from=builder /app/packages/backend/dist ./dist
 
-# 6. Set the final working directory for the running app
-WORKDIR /app/packages/backend
-
-# 7. Expose the port and define the start command
+# 6. Expose the port and define the start command
 EXPOSE 3003
 CMD [ "node", "dist/server.js" ]

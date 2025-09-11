@@ -2,30 +2,29 @@
 
 #-----------------------------------------------------------------
 # Stage 1: The "builder" stage
-# This stage installs all dependencies and builds the TypeScript code.
+# This stage builds the TypeScript source code.
 #-----------------------------------------------------------------
 FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Install pnpm and openssl for prisma generate
+# Install pnpm and openssl
 RUN npm install -g pnpm && \
     apt-get update && apt-get install -y openssl
 
-# Copy manifests first to leverage Docker cache
+# Copy manifests
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY packages/types/package.json ./packages/types/
 COPY packages/backend/package.json ./packages/backend/
-COPY packages/frontend/package.json ./packages/frontend/
 
-# THIS IS THE FIRST FIX: Copy all source code BEFORE installing.
-# This ensures prisma/schema.prisma is available for the generate command.
+# Copy all source code
 COPY . .
 
-# Install ALL dependencies.
+# Install ALL dependencies
 RUN pnpm install --frozen-lockfile
 
-# Build only the backend package. The `build` script already runs `prisma generate`.
+# Build the backend. The `build` script in package.json runs `prisma generate`
+# which is necessary here for the TypeScript compiler (tsc) to find the client types.
 RUN pnpm --filter "krishi-mitra-backend" build
 
 
@@ -35,53 +34,44 @@ RUN pnpm --filter "krishi-mitra-backend" build
 #-----------------------------------------------------------------
 FROM node:20-slim
 
-# THIS IS THE SECOND FIX: Install openssl for Prisma's runtime.
+# Install openssl for Prisma's runtime
 RUN apt-get update && apt-get install -y openssl && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Set environment variables for Python
-ENV PYTHONUNBUFFERED=1
-ENV VIRTUAL_ENV=/opt/venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-# Install system dependencies (Python)
-RUN apt-get update && \
-    apt-get install -y python3 python3-venv python3-pip && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Set up Python virtual environment
-RUN python3 -m venv $VIRTUAL_ENV
-
 WORKDIR /app
 
-# Install pnpm globally in the final stage
+# Install pnpm
 RUN npm install -g pnpm
 
-# Copy only the manifests required to install PRODUCTION dependencies
+# Copy manifests
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY packages/types/package.json ./packages/types/
 COPY packages/backend/package.json ./packages/backend/
 
+# Copy the prisma schema, which is needed for the generate command
+COPY packages/backend/prisma ./packages/backend/prisma
+
 # Install ONLY production dependencies.
 RUN pnpm install --prod --frozen-lockfile
 
-# Copy the Python scripts and install their dependencies
-COPY packages/backend/src/python/ ./packages/backend/src/python/
-RUN pip install --no-cache-dir -r packages/backend/src/python/requirements.txt
+# --> THE DEFINITIVE FIX <--
+# Explicitly generate the Prisma client inside the final production stage.
+# This guarantees the client exists in the correct location for the runtime.
+RUN pnpm --filter krishi-mitra-backend prisma generate
 
-# Copy the generated Prisma client and compiled code from the builder stage
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+# Copy the compiled application code from the builder stage
 COPY --from=builder /app/packages/backend/dist ./packages/backend/dist
-COPY --from=builder /app/packages/backend/prisma ./packages/backend/prisma
 COPY --from=builder /app/packages/backend/ecosystem.config.js ./packages/backend/
+
+# NOTE: We DO NOT copy the python files into this service anymore.
+# They live in their own service.
 
 # Change the final working directory
 WORKDIR /app/packages/backend
 
-# Expose the port your app will run on
+# Expose the port
 EXPOSE 3003
 
-# The command to start the application using pm2
+# The command to start the application
 CMD [ "pnpm", "start" ]

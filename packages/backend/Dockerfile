@@ -1,61 +1,56 @@
 #-----------------------------------------------------------------
 # Stage 1: Builder
-# - Installs all dependencies (prod + dev)
-# - Copies all source code
-# - Builds the TypeScript and generates Prisma client
+# - This stage builds the application and its dependencies.
 #-----------------------------------------------------------------
 FROM node:20-slim AS builder
 
-# 1. Install Python, Pip, and Git
+# 1. Install system dependencies including Python
 RUN apt-get update && \
     apt-get install -y python3 python3-venv python3-pip git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# 2. Create and set up a Python virtual environment
+# 2. Set up Python virtual environment
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# 3. Set up the working directory and install pnpm
+# 3. Set up Node.js environment and install pnpm
 WORKDIR /app
 RUN npm install -g pnpm
 
 # 4. Copy manifests to leverage Docker layer caching
-#    Crucially, this includes pnpm-workspace.yaml
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY packages/types/package.json ./packages/types/
 COPY packages/backend/package.json ./packages/backend/
 COPY packages/frontend/package.json ./packages/frontend/
 
-# 5. Install ALL monorepo dependencies
+# 5. Install all monorepo dependencies
 RUN pnpm install --frozen-lockfile
 
 # 6. Copy the entire monorepo source code
 COPY . .
 
-# 7. Install Python dependencies INTO the virtual environment
+# 7. Install Python dependencies
 RUN pip install --no-cache-dir -r packages/backend/src/python/requirements.txt
 
-# 8. Build the backend package AND all of its workspace dependencies
+# 8. Build the backend and all of its workspace dependencies
 RUN pnpm --filter "krishi-mitra-backend..." run build
 
 
 #-----------------------------------------------------------------
 # Stage 2: Pruner
-# - Creates a clean production-only node_modules directory
+# - This stage creates a minimal, production-only node_modules.
 #-----------------------------------------------------------------
 FROM builder AS pruner
 
 WORKDIR /app
-# Use pnpm's deploy command to create a pruned production node_modules
 RUN pnpm deploy --filter krishi-mitra-backend --prod /prod --legacy
 
 
 #-----------------------------------------------------------------
-# Stage 3: Production Image (WITH DEBUGGING)
-# - Starts from a fresh slim image
-# - Copies only the necessary built artifacts to a clean, flat structure
+# Stage 3: Production Image (FINAL, HARDENED VERSION)
+# - This stage creates the final, lean, and robust image.
 #-----------------------------------------------------------------
 FROM node:20-slim AS production
 
@@ -71,19 +66,16 @@ ENV VIRTUAL_ENV=/opt/venv
 COPY --from=builder /opt/venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# 4. Set up the final working directory
+# 4. Set up the final, self-contained application directory
 WORKDIR /app
 
 # 5. Copy the pruned package.json and node_modules from the pruner stage
 COPY --from=pruner /prod/package.json .
 COPY --from=pruner /prod/node_modules ./node_modules
 
-# 6. Copy the compiled application code from the builder stage
-COPY --from=builder /app/packages/backend/dist ./dist
+# 6. Copy the compiled application code using the robust trailing-slash syntax
+COPY --from=builder /app/packages/backend/dist/ ./dist/
 
-# 7. DIAGNOSTIC STEP: List all files to see the final structure
-RUN ls -R
-
-# 8. Expose the port and define the start command using pnpm
+# 7. Expose the port and define the self-contained start command
 EXPOSE 3003
 CMD [ "pnpm", "start" ]

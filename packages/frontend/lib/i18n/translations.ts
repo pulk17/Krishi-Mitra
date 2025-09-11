@@ -42,6 +42,7 @@ export interface Translations {
   // Dashboard
   welcomeMessage: string
   welcomeDescription: string
+  welcomeInstructions: string; // <-- ADDED THIS LINE
   diseaseDiagnosis: string
   yieldPrediction: string
   recentDiagnoses: string
@@ -138,6 +139,7 @@ export const translations: Record<Language, Translations> = {
     hindi: 'हिंदी',
     welcomeMessage: 'Welcome',
     welcomeDescription: 'Ready to help your plants grow healthy',
+    welcomeInstructions: 'Select a tool below to get started.', // <-- ADDED THIS LINE
     diseaseDiagnosis: 'Disease Diagnosis',
     yieldPrediction: 'Yield Prediction',
     recentDiagnoses: 'Recent Diagnoses',
@@ -226,6 +228,7 @@ export const translations: Record<Language, Translations> = {
     hindi: 'हिंदी',
     welcomeMessage: 'स्वागत है',
     welcomeDescription: 'आपके पौधों को स्वस्थ बढ़ने में मदद करने के लिए तैयार',
+    welcomeInstructions: 'शुरू करने के लिए नीचे एक उपकरण चुनें।', // <-- ADDED THIS LINE
     diseaseDiagnosis: 'रोग निदान',
     yieldPrediction: 'उपज भविष्यवाणी',
     recentDiagnoses: 'हाल के निदान',

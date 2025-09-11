@@ -23,11 +23,12 @@
   "author": "Your Name",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2",
+    "concurrently": "^9.2.1",
     "dotenv-cli": "^10.0.0",
-    "prisma": "^5.15.0",
+    "next": "^15.5.3",
+    "prisma": "^6.16.0",
     "rimraf": "^6.0.1",
-    "typescript": "^5.4.5"
+    "typescript": "^5.9.2"
   },
   "engines": {
     "node": ">=18.0.0",

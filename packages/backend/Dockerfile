@@ -49,7 +49,7 @@ FROM builder AS pruner
 
 WORKDIR /app
 # Use pnpm's deploy command to create a pruned production node_modules
-RUN pnpm deploy --filter krishi-mitra-backend --prod /prod
+RUN pnpm deploy --filter krishi-mitra-backend --prod /prod --legacy
 
 
 #-----------------------------------------------------------------

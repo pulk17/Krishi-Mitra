@@ -50,6 +50,10 @@ RUN python3 -m venv $VIRTUAL_ENV
 
 WORKDIR /app/packages/backend
 
+# --> THIS IS THE FIX <--
+# Install pnpm in the final production stage so the CMD can use it.
+RUN npm install -g pnpm
+
 # Install Python dependencies from the source code
 COPY --from=builder /app/packages/backend/src/python/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

@@ -1,10 +1,10 @@
-// IMPORTANT: Environment variables are now loaded EXTERNALLY via the dev script.
+// --- file: packages/backend/src/server.ts ---
 import { env } from './config/env';
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { diagnosisRouter } from './routes/diagnosis';
 import { userRouter } from './routes/user';
-import { predictionRouter } from './routes/prediction'; // <-- ADD THIS IMPORT
+import { predictionRouter } from './routes/prediction';
 import { auth } from './middleware/auth';
 import { errorHandler } from './middleware/errorHandler';
 import ApiError from './utils/ApiError';
@@ -33,7 +33,7 @@ app.get('/health', (_req, res) => {
 // --- API ROUTES ---
 app.use('/api/diagnose', diagnosisRouter);
 app.use('/api/user', auth, userRouter);
-app.use('/api/predict', predictionRouter); // <-- ADD THIS LINE TO MOUNT THE ROUTER
+app.use('/api/predict', predictionRouter);
 
 // --- ERROR HANDLING ---
 // Handle 404 for any routes not found
@@ -43,11 +43,5 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Global error handler - MUST be the last middleware
 app.use(errorHandler);
-
-// Start server
-app.listen(env.PORT, () => {
-  console.log(`🚀 Backend server running on http://localhost:${env.PORT}`);
-  console.log(`📡 Accepting requests from: ${env.FRONTEND_URL}`);
-});
 
 export default app;

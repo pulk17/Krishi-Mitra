@@ -59,25 +59,28 @@ RUN pnpm deploy --filter krishi-mitra-backend --prod /prod --legacy
 #-----------------------------------------------------------------
 FROM node:20-slim AS production
 
-# 1. Set environment
+# 1. Install pnpm, which will be our process manager
+RUN npm install -g pnpm
+
+# 2. Set environment
 ENV NODE_ENV=production
 ENV PORT=3003
 
-# 2. Copy the Python virtual environment
+# 3. Copy the Python virtual environment
 ENV VIRTUAL_ENV=/opt/venv
 COPY --from=builder /opt/venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# 3. Set up the final working directory
+# 4. Set up the final working directory
 WORKDIR /app
 
-# 4. Copy the pruned package.json and node_modules from the pruner stage
+# 5. Copy the pruned package.json and node_modules from the pruner stage
 COPY --from=pruner /prod/package.json .
 COPY --from=pruner /prod/node_modules ./node_modules
 
-# 5. Copy the compiled application code from the builder stage
+# 6. Copy the compiled application code from the builder stage
 COPY --from=builder /app/packages/backend/dist ./dist
 
-# 6. Expose the port and define the start command
+# 7. Expose the port and define the start command using pnpm
 EXPOSE 3003
-CMD [ "node", "dist/server.js" ]
+CMD [ "pnpm", "start" ]

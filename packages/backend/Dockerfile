@@ -1,6 +1,6 @@
 #-----------------------------------------------------------------
 # Stage 1: Builder
-# - This stage installs all dependencies and builds the source code.
+# - This stage builds the application and its dependencies.
 #-----------------------------------------------------------------
 FROM node:20-slim AS builder
 
@@ -34,42 +34,48 @@ COPY . .
 # 7. Install Python dependencies
 RUN pip install --no-cache-dir -r packages/backend/src/python/requirements.txt
 
-# 8. Build the backend and its dependencies using TypeScript's build mode
+# 8. Build the backend. `tsc --build` will handle the dependency order.
 RUN pnpm --filter "krishi-mitra-backend" run build
-
-# 9. Prune development dependencies to shrink node_modules
-RUN pnpm prune --prod
 
 
 #-----------------------------------------------------------------
-# Stage 2: Production Image (Simplified & Final)
-# - Copies artifacts directly from the pruned builder stage.
+# Stage 2: Pruner
+# - This stage creates a minimal, production-only node_modules.
+#-----------------------------------------------------------------
+FROM builder AS pruner
+
+WORKDIR /app
+RUN pnpm deploy --filter krishi-mitra-backend --prod /prod --legacy
+
+
+#-----------------------------------------------------------------
+# Stage 3: Production Image (FINAL)
+# - This stage creates the final, lean, and robust image.
 #-----------------------------------------------------------------
 FROM node:20-slim AS production
 
-# 1. Set environment
+# 1. Install pnpm, which will be our process manager
+RUN npm install -g pnpm
+
+# 2. Set environment
 ENV NODE_ENV=production
 ENV PORT=3003
 
-# 2. Copy the Python virtual environment
+# 3. Copy the Python virtual environment
 ENV VIRTUAL_ENV=/opt/venv
 COPY --from=builder /opt/venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# 3. Set up the final application directory
+# 4. Set up the final, self-contained application directory
 WORKDIR /app
 
-# 4. Copy the backend's package.json
-COPY --from=builder /app/packages/backend/package.json .
+# 5. Copy the pruned package.json and node_modules from the pruner stage
+COPY --from=pruner /prod/package.json .
+COPY --from=pruner /prod/node_modules ./node_modules
 
-# 5. Copy the pruned, production-only node_modules from the builder
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/backend/node_modules ./packages/backend/node_modules
-COPY --from=builder /app/packages/types/node_modules ./packages/types/node_modules
-
-# 6. Copy the compiled application code
+# 6. Copy the compiled application code using the robust trailing-slash syntax
 COPY --from=builder /app/packages/backend/dist/ ./dist/
 
-# 7. Expose the port and define the start command
+# 7. Expose the port and define the self-contained start command
 EXPOSE 3003
-CMD ["node", "dist/index.js"]
+CMD [ "pnpm", "start" ]

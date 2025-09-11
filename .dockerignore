@@ -1,0 +1,26 @@
+# Ignore all node_modules folders in the entire monorepo
+**/node_modules
+
+# Ignore all build output
+**/dist
+**/.next
+**/out
+**/build
+**/*.tsbuildinfo
+
+# Ignore environment files
+.env
+.env*
+
+# Ignore IDE and OS files
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Ignore logs
+logs
+*.log
+
+# Ignore git folder
+.git

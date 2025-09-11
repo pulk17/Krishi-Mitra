@@ -4,6 +4,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "./dist",
+    "rootDir": "./src",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -13,7 +14,7 @@
       "@krishi-mitra/types": ["../types/src"]
     }
   },
-  "include": ["src/**/*.ts", "test-gemini.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"],
   "references": [
     { "path": "../types" }

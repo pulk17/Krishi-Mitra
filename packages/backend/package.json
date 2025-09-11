@@ -9,7 +9,6 @@
     "test:gemini": "tsx test-gemini.ts",
     "build": "prisma generate && tsc --build --verbose && cpr src/python dist/python -o",
     "start": "pm2-runtime start ecosystem.config.js --env production",
-    "postinstall": "prisma generate",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

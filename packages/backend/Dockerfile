@@ -37,10 +37,8 @@ COPY . .
 # 7. Install Python dependencies INTO the virtual environment
 RUN pip install --no-cache-dir -r packages/backend/src/python/requirements.txt
 
-# 8. Build only the backend package
-#    This will now succeed because the workspace is correctly installed
-#    and the build script in package.json runs `prisma generate`.
-RUN pnpm --filter krishi-mitra-backend build
+# 8. Build the backend package AND all of its workspace dependencies
+RUN pnpm build --filter="krishi-mitra-backend..."
 
 
 #-----------------------------------------------------------------

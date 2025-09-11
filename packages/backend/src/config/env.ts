@@ -1,3 +1,4 @@
+// --- file: packages/backend/src/config/env.ts ---
 import { z } from "zod";
 
 const envSchema = z.object({
@@ -12,6 +13,9 @@ const envSchema = z.object({
   // Gemini
   GEMINI_API_KEY: z.string(),
   
+  // Prediction Service
+  PREDICTION_SERVICE_URL: z.string().url(),
+
   // Server
   PORT: z.string().optional(),
   NODE_ENV: z.enum(["development", "production", "test"]).optional(),

@@ -2,13 +2,13 @@
 
 #-----------------------------------------------------------------
 # Stage 1: The "builder" stage
-# This stage builds the TypeScript source code.
+# This stage installs all dependencies and builds the TypeScript code.
 #-----------------------------------------------------------------
 FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Install pnpm and openssl
+# Install pnpm and openssl for prisma generate
 RUN npm install -g pnpm && \
     apt-get update && apt-get install -y openssl
 
@@ -17,10 +17,10 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY packages/types/package.json ./packages/types/
 COPY packages/backend/package.json ./packages/backend/
 
-# Copy all source code
+# Copy all source code BEFORE installing.
 COPY . .
 
-# Install ALL dependencies
+# Install ALL dependencies.
 RUN pnpm install --frozen-lockfile
 
 # Build the backend. The `build` script in package.json runs `prisma generate`
@@ -55,17 +55,15 @@ COPY packages/backend/prisma ./packages/backend/prisma
 # Install ONLY production dependencies.
 RUN pnpm install --prod --frozen-lockfile
 
-# --> THE DEFINITIVE FIX <--
+# ----------------------------> THE DEFINITIVE FIX <----------------------------
 # Explicitly generate the Prisma client inside the final production stage.
-# This guarantees the client exists in the correct location for the runtime.
-RUN pnpm --filter krishi-mitra-backend prisma generate
+# We use `pnpm exec` to run the `prisma` binary directly. This is the correct syntax.
+RUN pnpm --filter krishi-mitra-backend exec prisma generate
+# ------------------------------------------------------------------------------
 
 # Copy the compiled application code from the builder stage
 COPY --from=builder /app/packages/backend/dist ./packages/backend/dist
 COPY --from=builder /app/packages/backend/ecosystem.config.js ./packages/backend/
-
-# NOTE: We DO NOT copy the python files into this service anymore.
-# They live in their own service.
 
 # Change the final working directory
 WORKDIR /app/packages/backend

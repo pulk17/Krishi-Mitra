@@ -38,7 +38,7 @@ COPY . .
 RUN pip install --no-cache-dir -r packages/backend/src/python/requirements.txt
 
 # 8. Build the backend package AND all of its workspace dependencies
-RUN pnpm build --filter="krishi-mitra-backend..."
+RUN pnpm --filter "krishi-mitra-backend..." run build
 
 
 #-----------------------------------------------------------------

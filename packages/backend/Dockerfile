@@ -53,7 +53,7 @@ RUN pnpm deploy --filter krishi-mitra-backend --prod /prod --legacy
 
 
 #-----------------------------------------------------------------
-# Stage 3: Production Image (REVISED)
+# Stage 3: Production Image (WITH DEBUGGING)
 # - Starts from a fresh slim image
 # - Copies only the necessary built artifacts to a clean, flat structure
 #-----------------------------------------------------------------
@@ -81,6 +81,9 @@ COPY --from=pruner /prod/node_modules ./node_modules
 # 6. Copy the compiled application code from the builder stage
 COPY --from=builder /app/packages/backend/dist ./dist
 
-# 7. Expose the port and define the start command using pnpm
+# 7. DIAGNOSTIC STEP: List all files to see the final structure
+RUN ls -R
+
+# 8. Expose the port and define the start command using pnpm
 EXPOSE 3003
 CMD [ "pnpm", "start" ]

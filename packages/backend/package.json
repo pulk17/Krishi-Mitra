@@ -2,7 +2,7 @@
   "name": "krishi-mitra-backend",
   "version": "1.0.0",
   "description": "Express.js backend for Krishi Mitra plant diagnosis system",
-  "main": "dist/server.js",
+  "main": "dist/index.js",
   "scripts": {
     "predev": "prisma generate",
     "dev": "dotenv -e ../../.env -- tsx --watch src/index.ts",

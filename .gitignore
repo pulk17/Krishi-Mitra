@@ -39,3 +39,4 @@ packages/**/prisma/migrations/
 
 #misc
 combine.py
+.venv/

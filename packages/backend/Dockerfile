@@ -37,6 +37,10 @@ RUN pip install --no-cache-dir -r packages/backend/src/python/requirements.txt
 # 8. Build the backend and all of its workspace dependencies
 RUN pnpm --filter "krishi-mitra-backend..." run build
 
+# 9. DIAGNOSTIC: Verify that the build output actually exists.
+# This will fail the build if the file is missing, giving us a clear error.
+RUN test -f /app/packages/backend/dist/index.js || (echo "--> BUILD FAILED: Compiled entrypoint /app/packages/backend/dist/index.js was NOT created." && exit 1)
+
 
 #-----------------------------------------------------------------
 # Stage 2: Pruner
